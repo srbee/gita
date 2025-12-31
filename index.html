@@ -1,1 +1,166 @@
+!DOCTYPE html>
+<html lang="sa">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Gita Ch 12 - Bhakti Yoga</title>
+    <style>
+        :root {
+            --saffron: #FF9933;
+            --deep-blue: #1A237E;
+            --gold: #FFD700;
+            --cream: #FFFDF0;
+            --text: #2C3E50;
+        }
 
+        body, html {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #1a237e 0%, #4a148c 100%);
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            display: flex; flex-direction: column; align-items: center;
+            overflow: hidden; color: white; touch-action: manipulation;
+        }
+
+        .header { text-align: center; padding: 15px 10px; z-index: 10; }
+        .header h1 { margin: 0; font-size: 1.3rem; color: var(--gold); text-transform: uppercase; }
+        
+        .counter-pill {
+            background: rgba(0,0,0,0.4);
+            padding: 5px 15px; border-radius: 20px;
+            border: 1px solid var(--gold); font-size: 0.9rem; margin-top: 8px;
+            display: inline-block;
+        }
+
+        /* The Interactive Scene */
+        .card-container {
+            width: 90vw; height: 60vh; max-width: 400px;
+            perspective: 1000px; position: relative; margin-top: 10px;
+        }
+
+        .card {
+            width: 100%; height: 100%; position: relative;
+            transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .card.is-flipped { transform: rotateY(180deg); }
+
+        .card-face {
+            position: absolute; width: 100%; height: 100%;
+            backface-visibility: hidden; border-radius: 25px;
+            display: flex; flex-direction: column; align-items: center;
+            justify-content: center; padding: 30px; box-sizing: border-box;
+            border: 5px solid var(--gold); box-shadow: 0 15px 35px rgba(0,0,0,0.5);
+        }
+
+        /* Front Side: Sanskrit */
+        .card-front { background-color: var(--cream); color: #800000; }
+        /* Back Side: English */
+        .card-back { 
+            background: linear-gradient(45deg, #ff8c00, #ff4500); 
+            color: white; transform: rotateY(180deg); 
+        }
+
+        .verse-tag { font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; opacity: 0.7; text-transform: uppercase; }
+        .sanskrit { font-size: 1.3rem; line-height: 1.6; font-weight: bold; text-align: center; width: 100%; }
+        .english { font-size: 1.1rem; line-height: 1.5; font-style: italic; text-align: center; }
+
+        /* Bottom Controls UI */
+        .nav-info {
+            display: flex; justify-content: space-between; width: 90vw; max-width: 400px;
+            margin-top: 25px; opacity: 0.8; font-size: 0.75rem; text-align: center;
+        }
+        .zone { background: rgba(255,255,255,0.1); padding: 8px; border-radius: 10px; flex: 1; margin: 0 5px; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Bhakti Yoga (Chapter 12)</h1>
+        <div class="counter-pill" id="counter">Verse 1 / 20</div>
+    </div>
+
+    <div class="card-container" id="tap-zone">
+        <div class="card" id="card-object">
+            <div class="card-face card-front">
+                <div class="verse-tag" id="label-f">Verse 12.1</div>
+                <div class="sanskrit" id="sanskrit-content">Loading...</div>
+            </div>
+            <div class="card-face card-back">
+                <div class="verse-tag">English Translation</div>
+                <div class="english" id="english-content">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="nav-info">
+        <div class="zone">◀ TAP LEFT<br>PREVIOUS</div>
+        <div class="zone">🔄 TAP CENTER<br>FLIP</div>
+        <div class="zone">TAP RIGHT ▶<br>NEXT</div>
+    </div>
+
+    <script>
+        // Full Dataset: All 20 Verses
+        const gitaVerses = [
+            {v:"12.1", s:"एवं सततयुक्ता ये भक्तास्त्वां पर्युपासते ।<br>ये चाप्यक्षरमव्यक्तं तेषां के योगवित्तमाः ॥ १ ॥", e:"Arjuna asked: Which are considered more perfect: those who are always properly engaged in Your devotional service, or those who worship the impersonal Brahman?"},
+            {v:"12.2", s:"मय्यावेश्य मनो ये मां नित्ययुक्ता उपासते ।<br>श्रद्धया परयोपेतास्ते मे युक्ततमा मताः ॥ २ ॥", e:"The Lord said: Those who fix their minds on My personal form and always worship Me with supreme faith are considered by Me to be most perfect."},
+            {v:"12.3-4", s:"ये त्वक्षरमनिर्देश्यमव्यक्तं पर्युपासते ।<br>संनियम्येन्द्रियग्रामं सर्वत्र समबुद्धयः ॥<br>ते प्राप्नुवन्ति मामेव सर्वभूतहिते रताः ॥ ३-४ ॥", e:"But those who worship the unmanifested and indestructible, by controlling the senses and being equal toward everyone, also attain Me."},
+            {v:"12.5", s:"क्लेशोऽधिकतरस्तेषामव्यक्तासक्तचेतसाम् ।<br>अव्यक्ता हि गतिर्दुःखं देहवद्भिरवाप्यते ॥ ५ ॥", e:"For those whose minds are attached to the unmanifested, progress is very difficult. To make progress in that discipline is always troublesome for the embodied."},
+            {v:"12.6-7", s:"ये तु सर्वाणि कर्माणि मयि संन्यस्य मत्पराः ।<br>तेषामहं समुद्धर्ता मृत्युसंसारसागरात् ॥ ६-७ ॥", e:"But for those who worship Me, surrendering all activities unto Me, I am the swift deliverer from the ocean of birth and death."},
+            {v:"12.8", s:"मय्येव मन आधत्स्व मयि बुद्धिं निवेशय ।<br>निवसिष्यसि मय्येव अत ऊर्ध्वं न संशयः ॥ ८ ॥", e:"Just fix your mind upon Me and engage all your intelligence in Me. Thus you will live in Me always, without a doubt."},
+            {v:"12.9", s:"अथ चित्तं समाधातुं न शक्नोषि मयि स्थिरम् ।<br>अभ्यासयोगेन ततो मामिच्छाप्तं धनंजय ॥ ९ ॥", e:"If you cannot fix your mind upon Me without deviation, then follow the regulated principles of bhakti-yoga to develop a desire to attain Me."},
+            {v:"12.10", s:"अभ्यासेऽप्यसमर्थोऽसि मत्कर्मपरमो भव ।<br>मदर्थमपि कर्माणि कुर्वन्सिद्धिमवाप्स्यसि ॥ १० ॥", e:"If you cannot practice the regulations of bhakti-yoga, then just try to work for Me, for by working for Me you will come to the perfect stage."},
+            {v:"12.11", s:"अथैतदप्यशक्तोऽसि कर्तुं मद्योगमाश्रितः ।<br>सर्वकर्मफलत्यागं ततः कुरु यतात्मवान् ॥ ११ ॥", e:"If you are unable to work in this consciousness, then try to act giving up all results of your work and try to be self-situated."},
+            {v:"12.12", s:"श्रेयो हि ज्ञानमभ्यासाज्ज्ञानाद्ध्यानं विशिष्यते ।<br>ध्यानात्कर्मफलत्यागस्त्यागाच्छान्तिरनन्तरम् ॥ १२ ॥", e:"Better than practice is knowledge; better than knowledge is meditation; and better than meditation is renunciation of the fruits of action, for peace follows such renunciation."},
+            {v:"12.13-14", s:"अद्वेष्टा सर्वभूतानां मैत्रः करुण एव च ।<br>निर्ममो निरहंकारः समदुःखसुखः क्षमी ॥ १३-१४ ॥", e:"One who is not envious but is a kind friend to all, free from ego, equal in happiness and distress, and always satisfied—such a devotee is very dear to Me."},
+            {v:"12.15", s:"यस्मान्नोद्विजते लोको लोकान्नोद्विजते च यः ।<br>हर्षामर्षभयोद्वेगैर्मुक्तो यः स च मे प्रियः ॥ १५ ॥", e:"He by whom no one is put into difficulty and who is not disturbed by anyone, who is poised in happiness and distress, is very dear to Me."},
+            {v:"12.16", s:"अनपेक्षः शुचिर्दक्ष उदासीनो गतव्यथः ।<br>सर्वारम्भपरित्यागी यो मद्भक्तः स मे प्रियः ॥ १६ ॥", e:"A devotee who is pure, expert, without cares, free from all pains, and who does not strive for results, is very dear to Me."},
+            {v:"12.17", s:"यो न हृष्यति न द्वेष्टि न शोचति न काङ्क्षति ।<br>शुभाशुभपरित्यागी भक्तिमान्यः स मे प्रियः ॥ १७ ॥", e:"One who neither rejoices nor hates, who neither laments nor desires, and who renounces both auspicious and inauspicious things, is very dear to Me."},
+            {v:"12.18-19", s:"समः शत्रौ च मित्रे च तथा मानापमानयोः ।<br>तुल्यनिन्दास्तुतिर्मौनी संतुष्टो येन केनचित् ॥ १८-१९ ॥", e:"One who is equal to friends and enemies, poised in honor and dishonor, heat and cold, and who is always satisfied—that person is dear to Me."},
+            {v:"12.20", s:"ये तु धर्म्यामृतमिदं यथोक्तं पर्युपासते ।<br>श्रद्दधाना मत्परमा भक्तास्तेऽतीव मे प्रियाः ॥ २० ॥", e:"Those who follow this imperishable path of devotional service and who engage themselves with faith, making Me their supreme goal, are exceedingly dear to Me."}
+        ];
+
+        let index = 0;
+        const cardObj = document.getElementById('card-object');
+        const tapZone = document.getElementById('tap-zone');
+        const sCont = document.getElementById('sanskrit-content');
+        const eCont = document.getElementById('english-content');
+        const countLabel = document.getElementById('counter');
+        const vTag = document.getElementById('label-f');
+
+        function updateCard() {
+            cardObj.style.opacity = '0';
+            setTimeout(() => {
+                const data = gitaVerses[index];
+                vTag.innerText = "Verse " + data.v;
+                sCont.innerHTML = data.s;
+                eCont.innerText = data.e;
+                countLabel.innerText = `Verse ${index + 1} / ${gitaVerses.length}`;
+                cardObj.classList.remove('is-flipped');
+                cardObj.style.opacity = '1';
+            }, 200);
+        }
+
+        tapZone.addEventListener('click', (e) => {
+            const rect = tapZone.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const width = rect.width;
+
+            if (clickX < width * 0.3) {
+                // Left 30% = Back
+                if (index > 0) { index--; updateCard(); }
+            } else if (clickX > width * 0.7) {
+                // Right 30% = Next
+                if (index < gitaVerses.length - 1) { index++; updateCard(); }
+            } else {
+                // Center 40% = Flip
+                cardObj.classList.toggle('is-flipped');
+            }
+        });
+
+        // Initialize first card
+        updateCard();
+    </script>
+</body>
+</html>
